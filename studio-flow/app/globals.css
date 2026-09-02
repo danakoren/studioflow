@@ -1,0 +1,293 @@
+@import "tailwindcss";
+
+/*
+ * ============================================================================
+ * StudioFlow design tokens — Tailwind v4
+ * ============================================================================
+ * Tailwind v4 keeps configuration in CSS, so there is no tailwind.config.js.
+ * Everything below is a TOKEN, which is the point: the palette, the radii, the
+ * shadows and the motion curves are defined once here and consumed by utility
+ * classes everywhere else. Retuning the product's look is editing this file,
+ * not sweeping forty components.
+ *
+ * ----------------------------------------------------------------------------
+ * CONTRAST WAS COMPUTED, NOT EYEBALLED
+ * ----------------------------------------------------------------------------
+ * Every foreground/background pair the UI actually uses was measured against
+ * WCAG AA (4.5:1 for body text) before being committed:
+ *
+ *   white on brand-600 .......... 5.27:1   primary buttons
+ *   white on brand-700 .......... 7.13:1   primary hover
+ *   brand-700 on brand-50 ....... 6.74:1   subtle badges, info panels
+ *   slate-900 on slate-50 ...... 16.55:1   body copy
+ *   slate-600 on slate-50 ....... 7.05:1   secondary copy
+ *   slate-500 on white .......... 4.76:1   hints and timestamps
+ *   white on rose-600 ........... 4.70:1   destructive buttons
+ *   white on emerald-700 ........ 5.48:1   success buttons
+ *
+ * emerald-600 was REJECTED for anything carrying white text (3.77:1) — the
+ * attendance "present" control uses emerald-700 for that reason. Amber never
+ * carries white text at all; it pairs amber-900 on amber-50 (8.75:1).
+ */
+
+@theme {
+  /*
+   * A system font stack, deliberately, instead of next/font/google.
+   * next/font downloads at BUILD TIME, which makes `next build` fail on a
+   * restricted network or an offline machine — a bad failure mode the week
+   * before a deadline. System fonts render instantly, add zero bytes, and
+   * cause no layout shift.
+   */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans Hebrew", sans-serif;
+
+  /* --------------------------------------------------------------------- */
+  /* BRAND — deep ocean. Replaces the default indigo.                       */
+  /* --------------------------------------------------------------------- */
+  /* A boutique studio reads as calm and considered, not as a SaaS dashboard.
+     Indigo-600 is the single most recognisable "framework default" colour in
+     the ecosystem; this teal-leaning ocean keeps the same structural role and
+     contrast behaviour while looking chosen rather than inherited. */
+  --color-brand-50: #f2fafb;
+  --color-brand-100: #ddf2f4;
+  --color-brand-200: #bce4e9;
+  --color-brand-300: #8bcfd8;
+  --color-brand-400: #52b0bf;
+  --color-brand-500: #2f92a3;
+  --color-brand-600: #1f7684; /* primary — white text passes AA */
+  --color-brand-700: #1c606d; /* hover */
+  --color-brand-800: #1b4f5a;
+  --color-brand-900: #1a424c;
+  --color-brand-950: #0b2a31;
+
+  /* --------------------------------------------------------------------- */
+  /* NEUTRALS — the `slate` ramp, retuned in place                          */
+  /* --------------------------------------------------------------------- */
+  /* These override Tailwind's built-in slate rather than adding a new name,
+     because 264 call sites already say `slate` and the retuned values are
+     still a slate — a touch cooler and deeper, so surfaces separate more
+     cleanly and body copy sits darker. Keeping the name means no mechanical
+     sweep and no misleading class names. */
+  --color-slate-50: #f8fafb;
+  --color-slate-100: #f1f4f6;
+  --color-slate-200: #e3e8ec;
+  --color-slate-300: #cbd3da;
+  --color-slate-400: #94a3af;
+  --color-slate-500: #64748b;
+  --color-slate-600: #4a5766;
+  --color-slate-700: #3a4553;
+  --color-slate-800: #232c38;
+  --color-slate-900: #141b24;
+  --color-slate-950: #0b1015;
+
+  /* --------------------------------------------------------------------- */
+  /* RADII — softer, and consistent across nesting levels                   */
+  /* --------------------------------------------------------------------- */
+  /* Cards sit at --radius-xl, controls inside them at --radius-lg. Keeping the
+     inner radius smaller than the outer is what stops nested corners looking
+     misaligned — the classic giveaway of an unconsidered interface. */
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.5rem;
+
+  /* --------------------------------------------------------------------- */
+  /* ELEVATION — layered, low-alpha, brand-tinted                           */
+  /* --------------------------------------------------------------------- */
+  /* Two stacked shadows per level: a tight contact shadow for the edge and a
+     wide diffuse one for depth. A single large blur reads as a grey smudge.
+     The colour is the brand's dark end rather than pure black, so shadows feel
+     part of the palette instead of dirtying it. */
+  --shadow-xs: 0 1px 2px 0 rgb(11 42 49 / 0.05);
+  --shadow-sm:
+    0 1px 2px 0 rgb(11 42 49 / 0.05), 0 1px 3px 0 rgb(11 42 49 / 0.06);
+  --shadow-md:
+    0 1px 2px -1px rgb(11 42 49 / 0.06), 0 4px 12px -2px rgb(11 42 49 / 0.08);
+  --shadow-lg:
+    0 1px 3px -1px rgb(11 42 49 / 0.07), 0 12px 28px -6px rgb(11 42 49 / 0.12);
+  --shadow-xl:
+    0 2px 4px -2px rgb(11 42 49 / 0.08), 0 24px 48px -12px rgb(11 42 49 / 0.18);
+
+  /* --------------------------------------------------------------------- */
+  /* MOTION                                                                */
+  /* --------------------------------------------------------------------- */
+  /* One easing curve for entrances and one for exits. Interfaces feel
+     incoherent when every component invents its own timing. */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
+  --animate-rise: rise 260ms var(--ease-out-soft) both;
+  --animate-pop: pop 240ms var(--ease-spring) both;
+  --animate-count-up: count-up 420ms var(--ease-out-soft) both;
+  --animate-sheen: sheen 1.1s var(--ease-out-soft) both;
+  --animate-pulse-ring: pulse-ring 900ms var(--ease-out-soft) both;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Keyframes                                                                 */
+/* ------------------------------------------------------------------------- */
+
+/* Entrance for panels and inline results. Small distances only: 8px reads as
+   "this arrived", 40px reads as "the page is rearranging itself". */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Confirmation for a completed action — a slight overshoot, then settle. */
+@keyframes pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A balance that just changed. Rises INTO place, so the eye is drawn to the
+   number rather than to movement elsewhere on the page. */
+@keyframes count-up {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A single light sweep across a surface. Used once, on a genuinely good
+   outcome (a waitlist seat) — never as an idle loop, which is noise. */
+@keyframes sheen {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(220%);
+  }
+}
+
+/* One expanding ring. Draws the eye to a spot without moving the layout. */
+@keyframes pulse-ring {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.75);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Base                                                                      */
+/* ------------------------------------------------------------------------- */
+
+:root {
+  /*
+   * Height of the sticky app header.
+   *
+   * Declared here because a SECOND sticky layer has to sit directly beneath it —
+   * the day headers in the week grid. Hard-coding the offset in that component
+   * meant it silently disagreed with reality (57px against an actual 69px), and
+   * the day labels tucked under the app bar on scroll. One value, two consumers.
+   *
+   * It matches the header's content: py-3 (24px) + a 44px min-height row.
+   */
+  --app-header-height: 69px;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  /* Stops the page shifting sideways when a dialog opens and hides the
+     scrollbar — a small jolt that makes an interface feel cheap. */
+  scrollbar-gutter: stable;
+}
+
+body {
+  background-color: var(--color-slate-50);
+  color: var(--color-slate-900);
+  /* Greyscale antialiasing on the light surfaces this product uses; the
+     default subpixel rendering makes the retuned neutrals look muddy. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+ * TYPOGRAPHY HIERARCHY
+ *
+ * Headings tighten as they grow. Default letter-spacing is designed for body
+ * text, so at display sizes it reads as loose and amateurish; large type needs
+ * NEGATIVE tracking to look intentional. Body copy is left alone — tightening
+ * it would cost legibility for no visual gain.
+ */
+h1 {
+  letter-spacing: -0.021em;
+}
+h2 {
+  letter-spacing: -0.016em;
+}
+h3,
+h4 {
+  letter-spacing: -0.011em;
+}
+
+/* Numbers that sit in columns or change in place must not reflow as digits
+   change width. */
+.tabular-nums,
+time,
+th,
+td {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Dialogs                                                                   */
+/* ------------------------------------------------------------------------- */
+/* The native <dialog> backdrop cannot be reached by Tailwind utilities alone. */
+dialog::backdrop {
+  background-color: rgb(11 16 21 / 0.5);
+  backdrop-filter: blur(3px);
+}
+
+dialog[open] {
+  animation: var(--animate-pop);
+}
+
+/* ------------------------------------------------------------------------- */
+/* REDUCED MOTION — a real preference, not a nicety                           */
+/* ------------------------------------------------------------------------- */
+/*
+ * Vestibular disorders make transform and opacity animation genuinely
+ * unpleasant, and this product is used one-handed in a studio doorway. Every
+ * animation above is decoration over a state change that is ALSO expressed in
+ * text, so removing all of it costs nothing but the flourish.
+ *
+ * 0.01ms rather than 0s: a zero duration prevents `animationend` and
+ * `transitionend` from firing at all, which silently breaks anything waiting
+ * on those events.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

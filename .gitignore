@@ -1,0 +1,38 @@
+# --- dependencies ---
+node_modules/
+.pnp
+.pnp.*
+
+# --- next.js build output ---
+.next/
+out/
+build/
+
+# --- environment ---
+# Never commit real values. Vercel holds these as project env vars.
+# .env.example is the documented template and IS tracked.
+.env
+.env.*
+!.env.example
+
+# --- typescript / build metadata ---
+*.tsbuildinfo
+next-env.d.ts
+
+# --- testing ---
+coverage/
+
+# --- vercel ---
+.vercel
+
+# --- editor / OS noise ---
+.DS_Store
+*.swp
+*.swo
+*.pem
+
+# --- logs ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
