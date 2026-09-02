@@ -1,19 +1,23 @@
 /**
- * middleware.ts (project root)
+ * proxy.ts (project root)
+ *
+ * Next.js 16 renamed the Middleware file convention to Proxy; the behaviour is
+ * unchanged. Older notes in StudioFlow_Docs/ still say "middleware" and are
+ * describing this file.
  *
  * Runs on every matched request. Its ESSENTIAL job is refreshing the Supabase
  * session cookie, because Server Components cannot write cookies and a user
  * would otherwise be silently logged out when the access token expires.
  *
  * Its SECONDARY job is coarse route gating, which is an optimisation only.
- * Middleware is NOT a security boundary: a PostgREST request issued from the
- * browser console never passes through it. RLS is the boundary.
+ * This is NOT a security boundary: a PostgREST request issued from the browser
+ * console never passes through it. RLS is the boundary.
  */
 
 import type { NextRequest } from 'next/server';
 import { updateSession } from '@/lib/supabase/middleware';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return updateSession(request);
 }
 

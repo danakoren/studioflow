@@ -4,8 +4,23 @@
     {
       "name": "studioflow-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "studio-flow", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "studio-flow",
+        "run",
+        "dev"
+      ],
       "port": 3000
+    },
+    {
+      "name": "studioflow-prod",
+      "runtimeExecutable": "/Users/danakoren/Desktop/fullstack/fullstack_proj/studio-flow/node_modules/.bin/next",
+      "runtimeArgs": [
+        "start",
+        "/Users/danakoren/Desktop/fullstack/fullstack_proj/studio-flow"
+      ],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }
