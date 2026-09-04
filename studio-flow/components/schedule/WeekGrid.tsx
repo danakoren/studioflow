@@ -53,7 +53,7 @@ export function WeekGrid({
   sessions: WeekGridSession[];
   tones: Map<string, ClassTone>;
   timeZone: string;
-  /** Monday 00:00 UTC of the week being shown. */
+  /** Sunday 00:00 UTC of the week being shown (Israeli week, Sunday-first). */
   weekStartIso: string;
   nowIso: string;
   hrefFor: (sessionId: string) => string;

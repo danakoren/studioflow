@@ -188,11 +188,23 @@ export function hoursUntil(iso: string, nowIso: string): number {
   return (new Date(iso).getTime() - new Date(nowIso).getTime()) / 3_600_000;
 }
 
-/** Monday 00:00 of the week containing `base`, offset by N weeks, as UTC ISO. */
+/**
+ * Sunday 00:00 of the week containing `base`, offset by N weeks, as UTC ISO.
+ *
+ * The week starts on SUNDAY because the studio is Israeli, where Sunday is the
+ * first working day and the weekend falls on Friday–Saturday. A Monday-first
+ * calendar would put the two weekend days at opposite ends of the row and split
+ * the working week across two grids.
+ *
+ * getUTCDay() is already Sunday-indexed (Sunday = 0), so the offset is the day
+ * number itself. The previous Monday-first version needed `(getUTCDay() + 6) % 7`
+ * to rotate that indexing; changing the week start therefore means DELETING the
+ * rotation, not adjusting it.
+ */
 export function weekStart(base: Date, weekOffset: number): string {
   const date = new Date(base);
-  const daysSinceMonday = (date.getUTCDay() + 6) % 7;
-  date.setUTCDate(date.getUTCDate() - daysSinceMonday + weekOffset * 7);
+  const daysSinceSunday = date.getUTCDay();
+  date.setUTCDate(date.getUTCDate() - daysSinceSunday + weekOffset * 7);
   date.setUTCHours(0, 0, 0, 0);
   return date.toISOString();
 }

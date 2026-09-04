@@ -85,12 +85,13 @@ export default async function SchedulePage({
    *
    * This used to start from `now` on the current week, because a LIST should
    * not open with Tuesday's finished 07:00 when it is Thursday. A GRID has the
-   * opposite requirement: Monday to Wednesday still have to be drawn, or the
-   * calendar renders three blank columns and looks broken rather than historic.
+   * opposite requirement: the days already gone still have to be drawn, or the
+   * calendar renders blank columns and looks broken rather than historic.
    *
-   * So one query covers Monday–Sunday and each view narrows it: the grid shows
-   * everything (dimming what has passed), the small-screen list still drops the
-   * past. One round trip, two correct presentations.
+   * So one query covers Sunday–Saturday (the Israeli week) and each view
+   * narrows it: the grid shows everything (dimming what has passed), the
+   * small-screen list still drops the past. One round trip, two correct
+   * presentations.
    */
   const sessions = await getScheduleRange(studio.id, fromIso, toIso);
 
