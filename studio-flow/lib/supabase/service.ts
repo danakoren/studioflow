@@ -9,9 +9,15 @@
  *
  * Rules, enforced mechanically rather than by convention:
  *
- *   1. This module may be imported ONLY by app/api/cron/**. Enforced by the
- *      ESLint `no-restricted-imports` rule in .eslintrc.json — a violation
+ *   1. This module may be imported ONLY by app/api/cron/** and
+ *      actions/member.actions.ts (admin user creation). Enforced by the
+ *      ESLint `no-restricted-imports` rule in eslint.config.mjs — a violation
  *      fails the build, not the review.
+ *
+ *      That rule previously lived in .eslintrc.json, which ESLint 9 ignores
+ *      whenever a flat config is present: for a period it was silently not
+ *      running at all. If you move it again, prove it still fires by importing
+ *      this module somewhere disallowed and watching `npm run lint` fail.
  *
  *   2. The key is NEVER prefixed NEXT_PUBLIC_, so it cannot be inlined into
  *      the client bundle. Test PR-58 runs `next build` and greps

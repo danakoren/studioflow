@@ -2,16 +2,16 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
     {
-      "path": "/api/cron/dispatch-notifications",
-      "schedule": "*/5 * * * *"
-    },
-    {
       "path": "/api/cron/finalize-attendance",
-      "schedule": "0 * * * *"
+      "schedule": "0 2 * * *"
     },
     {
       "path": "/api/cron/expire-credits",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/dispatch-notifications",
+      "schedule": "0 4 * * *"
     }
   ]
 }

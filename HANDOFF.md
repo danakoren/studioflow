@@ -4,7 +4,9 @@ Class booking, waitlist and credit management for a small boutique studio.
 Written to seed a fresh session: everything below was verified against a real
 `npm run build`, not recalled.
 
-**Immediate next step: deploy to Vercel.** See [Deploying](#deploying-to-vercel).
+**Status: deployed to Vercel and live.** The three cron jobs are implemented.
+One documented deviation from the specification is forced by the Vercel Hobby
+tier — see [Cron schedules](#71-cron-schedules--documented-deviation-from-the-specification).
 
 ---
 
@@ -228,15 +230,81 @@ Things that will bite, in order:
    `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `CRON_SECRET`.
    **`NEXT_PUBLIC_SITE_URL` must be changed to the Vercel domain** — it builds
    the auth-callback URL. Add that domain to Supabase's redirect allowlist too.
-3. **`/api/cron/*` is not implemented.** The spec defines three jobs —
-   `finalize-attendance` (BR-12), `expire-credits` (BR-13),
-   `dispatch-notifications` — and `service.ts` allowlists the path, but no route
-   handlers exist. Deploy succeeds; **those rules simply never run**, so
-   attendance never auto-finalises and credits never expire. Each must verify
-   `CRON_SECRET` before doing anything.
+3. **`/api/cron/*` is implemented** — all three routes exist and are wired in
+   `vercel.json`. Each calls `authorizeCronRequest()` (`lib/cron/authorize.ts`)
+   before anything else: a constant-time check of the `Authorization: Bearer`
+   header against `CRON_SECRET`, failing closed with 503 when that variable is
+   unset or still the `.env.example` placeholder. Generate the real value with
+   `openssl rand -base64 32`, set it in Vercel, and redeploy — environment
+   variables bind at build time. **See §7.1 for the schedule deviation.**
 4. **Email has never actually been sent.** Confirmation is ON and Resend is in
    env, but untested. Admin-created accounts bypass it (`email_confirm: true`),
    so nothing is broken today — it matters if password reset is ever wired up.
+   While `RESEND_API_KEY` is absent or still the placeholder,
+   `dispatch-notifications` deliberately claims nothing and reports
+   `skipped`, because each notification allows only three delivery attempts
+   and running against a dead mailer would burn the entire queue to `failed`
+   permanently. In-app notifications are unaffected. `RESEND_FROM` sets the
+   sender identity and needs a domain verified in Resend.
+
+### 7.1 Cron schedules — documented deviation from the specification
+
+**Note for reviewers.** The cron intervals in `studio-flow/vercel.json` are
+LESS FREQUENT than the ones the specification requires. This is a hosting-tier
+constraint, not a design change, and no business rule was altered to accommodate
+it.
+
+| Job | Specified (Design §4.7) | Deployed | Why |
+|---|---|---|---|
+| `dispatch-notifications` | `*/5 * * * *` (every 5 min) | `0 4 * * *` (daily) | Hobby tier |
+| `finalize-attendance` | `0 * * * *` (hourly) | `0 2 * * *` (daily) | Hobby tier |
+| `expire-credits` | `0 3 * * *` (daily) | `0 3 * * *` (daily) | **unchanged** |
+
+**The constraint.** Vercel's Hobby plan permits cron jobs that run *at most once
+per day*. A more frequent expression is not merely throttled — it is **rejected
+at deploy time**, with:
+
+> *Hobby accounts are limited to daily cron jobs. This cron expression would run
+> more than once per day.*
+
+Hobby also gives only per-hour scheduling precision, so a job set for 02:00 may
+fire anywhere up to 02:59. Source: Vercel, *Usage & Pricing for Cron Jobs*
+(limits current as of 2026-07-15). Deploying the specified `*/5` and `0 * * * *`
+expressions on this account therefore fails the build outright — the application
+could not be published at all.
+
+**What this does and does not affect.** The *rules* are unchanged; only how
+promptly they are applied:
+
+- **BR-12 (unmarked attendance defaults to `attended`)** still resolves exactly
+  as specified, and still only for bookings genuinely past the studio's
+  `attendance_window_hours`. A booking now waits up to 24 hours for that
+  resolution instead of up to 1 hour. Nothing is resolved early or wrongly.
+- **BR-13 (credit expiry)** is **entirely unaffected** — it was specified as a
+  nightly job and remains one, at the same time of day.
+- **Notification emails** are sent in one daily batch rather than every five
+  minutes. **In-app notifications are not delayed at all**: they are written
+  synchronously by `__notify()` at the moment the triggering event occurs, and
+  are visible immediately. Email is the secondary channel by design
+  (Product Spec assumption A4), so the delay degrades promptness, not delivery.
+- **No correctness property is weakened.** Every job function selects only rows
+  in a not-yet-processed state, so all three are idempotent and none is
+  sensitive to *when* it runs — only to *whether* it eventually runs.
+
+**Restoring the specified intervals** requires no code change whatsoever, only a
+Vercel Pro account (which permits per-minute schedules). Replace the `crons`
+array in `studio-flow/vercel.json` with the specified values and redeploy:
+
+```json
+"crons": [
+  { "path": "/api/cron/dispatch-notifications", "schedule": "*/5 * * * *" },
+  { "path": "/api/cron/finalize-attendance",    "schedule": "0 * * * *" },
+  { "path": "/api/cron/expire-credits",         "schedule": "0 3 * * *" }
+]
+```
+
+Cron expressions are interpreted in **UTC**, so the deployed `0 3 * * *` fires at
+05:00 or 06:00 in the studio's `Asia/Jerusalem` timezone depending on DST.
 
 ---
 
