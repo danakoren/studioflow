@@ -33,9 +33,7 @@ asks it to. This is documented in `StudioFlow_Docs/02-technical-architecture.md`
 
 ### Live application
 
-> **Live URL:** `https://REPLACE-ME.vercel.app`
->
-> <!-- ⚠️ REPLACE the line above with the real Vercel domain before submitting. -->
+> ### 🔗 https://studioflow-rust.vercel.app
 
 **Administrator login**
 
