@@ -119,13 +119,39 @@ Three background jobs are required by the specification:
 
 | Job | Frequency | Purpose | Spec reference |
 |---|---|---|---|
-| Notification dispatch | Every 5 minutes | Read unsent rows from the notification outbox, send via Resend, mark sent | C27 |
-| Attendance finalisation | Hourly | Resolve unmarked bookings past the marking window to `attended` | BR-12 |
+| Notification dispatch | Daily | Read unsent rows from the notification outbox, send via Resend, mark sent | C27 |
+| Attendance finalisation | Daily | Resolve unmarked bookings past the marking window to `attended` | BR-12 |
 | Credit expiry | Nightly | Write compensating ledger entries for expired unused credits | BR-13 |
 
 **Primary mechanism:** Vercel Cron invoking protected Route Handlers.
-**Identified risk:** Vercel's hobby tier restricts cron frequency, which may make five-minute dispatch unavailable on the free plan.
-**Fallback:** Supabase `pg_cron`, which is available in-database and can invoke the same logic directly. Because the promotion and expiry logic already lives in Postgres functions, moving the scheduler costs almost nothing — the job bodies do not change. This portability is a deliberate consequence of principle 2.
+
+**Identified risk — since materialised, and resolved here.** This document
+anticipated that Vercel's Hobby tier would restrict cron frequency. It does, and
+more strictly than "may be unavailable" suggested: the tier permits **at most one
+run per day**, and a more frequent expression is **rejected at deploy time**
+rather than throttled, failing the build outright. Five-minute dispatch and
+hourly finalisation are therefore not available on the deployment account, and
+the frequencies in the table above are the ones actually deployed.
+
+**Resolution: remain on Vercel Cron at daily frequency.** This is sound because
+every job body selects only rows in a not-yet-processed state, making all three
+idempotent and sensitive to *whether* they run rather than *when*. No business
+rule changes: BR-12 still resolves only bookings genuinely past the studio's
+`attendance_window_hours`, and BR-13 was specified nightly and remains nightly.
+The cost is promptness alone — an unmarked booking waits up to 24 hours for
+resolution instead of up to 1 hour, and notification emails are batched daily.
+In-app notifications are **not** delayed at all: `__notify()` writes them
+synchronously as part of the triggering transaction, and email is the secondary
+channel by design (Product Spec assumption A4).
+
+**Fallback, unchanged and still available:** Supabase `pg_cron`, which is
+available in-database and can invoke the same logic directly. Because the
+promotion and expiry logic already lives in Postgres functions, moving the
+scheduler costs almost nothing — the job bodies do not change. This portability
+is a deliberate consequence of principle 2, and it is what makes the frequency
+constraint a hosting decision rather than an architectural one. Restoring the
+original frequencies requires only an edited `vercel.json` on a Pro account, or
+a move to `pg_cron`; no application code is affected either way.
 
 ---
 

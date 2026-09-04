@@ -595,13 +595,19 @@ Every action executes these five stages in this order:
 
 ### 4.7 Cron Route Handlers
 
-| Route | Schedule | Job | Auth |
+| Route | Schedule (UTC) | Job | Auth |
 |---|---|---|---|
-| `/api/cron/dispatch-notifications` | `*/5 * * * *` | Send up to 50 pending emails, increment attempts, mark sent/failed | `CRON_SECRET` header |
-| `/api/cron/finalize-attendance` | `0 * * * *` | Apply BR-12 to bookings past the attendance window | `CRON_SECRET` header |
+| `/api/cron/finalize-attendance` | `0 2 * * *` | Apply BR-12 to bookings past the attendance window | `CRON_SECRET` header |
 | `/api/cron/expire-credits` | `0 3 * * *` | Expire lapsed grants, write compensating ledger entries | `CRON_SECRET` header |
+| `/api/cron/dispatch-notifications` | `0 4 * * *` | Send up to 50 pending emails, increment attempts, mark sent/failed | `CRON_SECRET` header |
 
 All three use the service-role client and are idempotent: each selects only rows in a not-yet-processed state and moves them forward, so a duplicate invocation is harmless.
+
+**On the daily frequency.** These are the schedules deployed, and they are daily because the Vercel Hobby tier permits at most one cron run per day — rejecting a more frequent expression at deploy time rather than throttling it. Architecture §1.5 identified this risk before deployment and it duly materialised; the resolution and its consequences are recorded there. Idempotency is what makes the constraint tolerable: no job is sensitive to *when* it runs, only to *whether* it eventually runs. Restoring the originally specified frequencies — `*/5 * * * *` for dispatch and `0 * * * *` for finalisation — requires only an edited `crons` array in `studio-flow/vercel.json` on a Pro account, with no change to any route handler or job function.
+
+Schedules are staggered rather than coincident so the three invocations do not contend for the same connection pool, and are interpreted in **UTC**: `0 3 * * *` fires at 05:00 or 06:00 in the studio's `Asia/Jerusalem` timezone depending on daylight saving.
+
+Authorisation is a constant-time comparison of the `Authorization: Bearer` header against `CRON_SECRET`, implemented once in `lib/cron/authorize.ts` and called as the first statement of every handler. It **fails closed**: an unset or placeholder secret returns 503 and runs no job, so a forgotten environment variable cannot leave an endpoint open that mutates every record in the studio.
 
 ---
 
@@ -689,7 +695,7 @@ Each generated occurrence is inserted independently. The exclusion constraints f
 
 ### 5.5 Attendance finalisation — BR-12
 
-Hourly, the job selects confirmed bookings whose session ended more than `attendance_window_hours` ago and whose `attendance` is still null, then sets `attendance` to the studio's `unmarked_attendance_default` with `attendance_auto_resolved = true`.
+Daily, the job selects confirmed bookings whose session ended more than `attendance_window_hours` ago and whose `attendance` is still null, then sets `attendance` to the studio's `unmarked_attendance_default` with `attendance_auto_resolved = true`.
 
 No credit movement occurs. A no-show already forfeited its credit at booking time (BR-10) and an attended class likewise; attendance is a record, not a transaction.
 
