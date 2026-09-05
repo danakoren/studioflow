@@ -43,7 +43,7 @@ studioflow/
 │   ├── (auth)/
 │   │   ├── layout.tsx                    # Centred card layout
 │   │   ├── login/page.tsx
-│   │   └── register/page.tsx
+│   │   └── change-password/page.tsx    # Forced rotation, any role
 │   │
 │   ├── (public)/
 │   │   ├── layout.tsx                    # Public nav
@@ -55,10 +55,8 @@ studioflow/
 │   │   ├── layout.tsx                    # Requires membership
 │   │   └── my/
 │   │       ├── bookings/page.tsx
-│   │       ├── history/page.tsx
 │   │       ├── credits/page.tsx
-│   │       ├── notifications/page.tsx
-│   │       └── profile/page.tsx
+│   │       └── notifications/page.tsx
 │   │
 │   ├── (instructor)/
 │   │   ├── layout.tsx                    # Requires instructor role
@@ -77,9 +75,6 @@ studioflow/
 │   │       ├── students/
 │   │       │   ├── page.tsx
 │   │       │   └── [id]/page.tsx         # Detail + ledger + grant
-│   │       ├── instructors/page.tsx
-│   │       ├── class-types/page.tsx
-│   │       ├── rooms/page.tsx
 │   │       ├── settings/page.tsx
 │   │       └── reports/page.tsx
 │   │
@@ -152,12 +147,9 @@ studioflow/
 │   └── seed.sql                          # Demo data
 │
 ├── tests/
-│   ├── unit/                             # Vitest — lib/domain
-│   ├── integration/                      # Vitest — actions + DB
-│   ├── e2e/                              # Playwright
-│   └── fixtures/
+│   └── unit/                             # Vitest — pure functions
 │
-├── middleware.ts
+├── proxy.ts                              # Session refresh + route gating
 ├── vercel.json                           # Cron definitions
 └── [config files]
 ```
@@ -216,7 +208,7 @@ The anti-pattern to avoid: marking a page `"use client"` because one button need
 |---|---|---|
 | `CreditBalanceCard` | Server | Balance, next expiry warning |
 | `CreditLedgerTable` | Server | Paginated movement history |
-| `GrantCreditsForm` | Client | Admin grant form (react-hook-form + Zod) |
+| `GrantCreditsForm` | Client | Admin grant form |
 
 **Attendance**
 
@@ -623,7 +615,7 @@ The resolution:
 |---|---|---|
 | `lib/domain/*.ts` | Pure functions computing the same rules | **Display only** |
 | Postgres functions | The same rules, transactionally | **Authoritative** |
-| `tests/unit/policy-contract.test.ts` | A shared table of cases run against both | Proves agreement |
+| `tests/unit/policy.test.ts` | A shared table of cases | Covers the TypeScript side |
 
 The pure TypeScript functions exist so `CancelBookingDialog` can say "you will lose this credit" *before* the user confirms. They never decide anything. The database decides. `tests/unit/policy.test.ts` covers the TypeScript side against a fixture table. Agreement with the Postgres implementation is maintained by keeping the two in step by hand; nothing asserts it automatically.
 
@@ -715,11 +707,11 @@ This keeps the balance a simple sum over active grants while leaving the student
 |---|---|---|---|
 | **Server data** | Schedule, bookings, balance | RSC + `revalidatePath` | The server is the source; caching it clientside creates a second truth |
 | **URL state** | Selected week, filters, page | `searchParams` | Shareable, bookmarkable, survives refresh, needs no state library |
-| **Form state** | Field values, field errors | `react-hook-form` | Uncontrolled inputs avoid re-render per keystroke |
+| **Form state** | Field values, field errors | `useState` + `useTransition` | Local to the form; the Server Action owns the result |
 | **Action state** | Pending, result, error | `useActionState`, `useFormStatus` | Built into the Server Action lifecycle |
 | **Optimistic state** | "Booking…" before confirm | `useOptimistic` | Immediate feedback, automatic rollback on failure |
 | **Ephemeral UI** | Dialog open, accordion | `useState` | Local, disposable |
-| **Transient feedback** | Toasts | `sonner` | Fire-and-forget |
+| **Transient feedback** | Credit-spent receipt | `CreditSpentToast` | Purpose-built; see `components/ui/action-message.tsx` on why toasts are not used for action results |
 
 ### 6.2 No global client store
 

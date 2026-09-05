@@ -107,7 +107,7 @@ This distinction is the backbone of the security model and is worth stating prec
 
 | Client | Key used | RLS | Where it runs | Used for |
 |---|---|---|---|---|
-| **Browser client** | Anon (public) | Enforced | Browser | Auth calls (login, register, logout) only |
+| **Browser client** | Anon (public) | Enforced | Browser | Auth calls (login, logout) only |
 | **Server client** | Anon + user's session cookie | Enforced | RSC, Server Actions | All normal reads and writes — the default |
 | **Service client** | Service role (secret) | **Bypassed** | Cron Route Handlers only | Scheduled jobs acting on all studios |
 
@@ -259,7 +259,6 @@ Routes are organised with App Router route groups. Groups shape the folder struc
 | `/schedule` | Full upcoming schedule with live availability | Server, dynamic |
 | `/schedule/[sessionId]` | Session detail — instructor, room, remaining seats | Server, dynamic |
 | `/login` | Sign in | Client form |
-| `/register` | Create account | Client form |
 | `/auth/callback` | Session establishment | Route Handler |
 
 The schedule is public and requires no account. This directly serves Flow 1: requiring registration before a student can see whether the studio offers a class at a time they can attend suppresses conversion for no benefit.
@@ -269,10 +268,9 @@ The schedule is public and requires no account. This directly serves Flow 1: req
 | Route | Purpose |
 |---|---|
 | `/my/bookings` | Upcoming bookings, waitlist entries with position, cancel action |
-| `/my/history` | Past bookings with attendance outcome |
 | `/my/credits` | Current balance, full ledger history, expiry warnings |
 | `/my/notifications` | In-app notification centre |
-| `/my/profile` | Name, phone, password change |
+| `/change-password` | Forced password rotation for an admin-created account; applies to every role |
 
 ### 3.3 Instructor
 
@@ -293,9 +291,6 @@ Deliberately minimal. The instructor role has one job in the product and should 
 | `/admin/sessions/[id]` | Full session management, manual booking and removal |
 | `/admin/students` | Student list with balances and last-attendance |
 | `/admin/students/[id]` | Student detail, ledger, grant credits |
-| `/admin/instructors` | Invite and manage instructors |
-| `/admin/class-types` | Class type management |
-| `/admin/rooms` | Room and capacity management |
 | `/admin/settings` | Studio policy: cancellation window, promotion cutoff, timezone |
 | `/admin/reports` | Fill rate, attendance, no-show, waitlist conversion, inactive students |
 
@@ -499,14 +494,12 @@ The assignment requires justification for each dependency. Each entry states wha
 |---|---|---|
 | **Tailwind CSS** | Styling | Utility classes keep styling adjacent to markup, which suits a component-per-file structure. Avoids a parallel stylesheet hierarchy that drifts from the components it styles. |
 | **shadcn/ui** (Radix primitives) | Accessible components | Dialogs, dropdowns, date pickers and toasts with keyboard navigation and focus management already correct. Components are copied into the repository rather than installed, so they are readable, modifiable and explainable — which matters for the assignment's requirement to understand every part of the code. Building an accessible dialog by hand is a genuine time sink with no learning payoff here. |
-| **`react-hook-form`** | Form state | Uncontrolled inputs avoid re-rendering the form on every keystroke. Integrates with Zod through a resolver, so the same schema validates on client and server. |
 | **`lucide-react`** | Icons | Tree-shakeable SVG icon set. |
 
 ### 6.4 Time
 
 | Dependency | Role | Justification |
 |---|---|---|
-| **`date-fns` + `date-fns-tz`** | Date arithmetic and timezone conversion | The most defect-prone area of this domain. Sessions are stored in UTC (BR-14) and displayed in `Asia/Jerusalem`, which observes daylight saving. Every policy calculation — is this cancellation inside the twelve-hour window, is this promotion inside the two-hour cutoff — is a comparison across that boundary. Native `Date` has no timezone support beyond the host's local zone, which on Vercel is UTC and on the student's laptop is not; that mismatch produces bugs that appear only in production. `date-fns-tz` makes the conversion explicit. Chosen over Luxon for tree-shaking and over Moment because Moment is in maintenance mode. |
 
 ### 6.5 Email
 
@@ -518,9 +511,7 @@ The assignment requires justification for each dependency. Each entry states wha
 
 | Dependency | Role | Justification |
 |---|---|---|
-| **Vitest** | Unit and integration tests | Native TypeScript and ESM support, fast watch mode. Used for business-rule logic — window calculations, promotion eligibility, balance derivation. |
-| **React Testing Library** | Component tests | Tests behaviour through the accessibility tree rather than implementation detail, so refactors do not break tests spuriously. |
-| **Playwright** | End-to-end tests | Required for the flows that only exist across pages: register → book → cancel → promote. **Critically, it is also the tool that proves success criterion 3** — parallel workers can issue simultaneous booking requests for a single remaining seat, which is the only realistic way to demonstrate that §4.4 works. |
+| **Vitest** | Unit tests | Native TypeScript and ESM support, fast watch mode. Used for business-rule logic — window calculations, promotion eligibility, balance derivation. |
 
 ### 6.7 Deliberately not used
 

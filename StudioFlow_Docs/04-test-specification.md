@@ -269,7 +269,7 @@ These follow the flows in Product Specification §7 end to end, and are the test
 | Step | Action | Expected |
 |---|---|---|
 | 1 | Anonymous visitor opens `/schedule` | Sessions visible, no login wall |
-| 2 | Selects a session, clicks Book | Redirected to login/register |
+| 2 | Selects a session, clicks Book | Redirected to login |
 | 3 | Registers | Account created, returned to session |
 | 4 | Attempts booking with zero balance | `INSUFFICIENT_CREDITS`, prompt to contact studio |
 | 5 | Admin grants 10 credits | Balance = 10 |
