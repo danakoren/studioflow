@@ -35,15 +35,20 @@ asks it to. This is documented in `StudioFlow_Docs/02-technical-architecture.md`
 
 > ### 🔗 https://studioflow-rust.vercel.app
 
-**Administrator login**
+### Sign-in credentials — all three roles
 
-| Email | Password |
-|---|---|
-| `admin.a@test` | `password123` |
+The system has three roles. Every seeded account uses the same password,
+`password123`, and none is forced to change it on first login.
 
-*(Other seeded accounts, same password: `instructor1.a@test`, `instructor2.a@test`,
-and `student1.a@test` through `student6.a@test`. Signing in as a student is the
-quickest way to see the booking flow from the member's side.)*
+| Role | Email | Password | Signed in as | Navigation this role receives |
+|---|---|---|---|---|
+| **Administrator** | `admin.a@test` | `password123` | Dana Cohen | Dashboard · Schedule · Students · Reports · Settings |
+| **Instructor** | `instructor2.a@test` | `password123` | Omer Levi | Schedule · Teaching · My classes · Credits |
+| **Student** | `student1.a@test` | `password123` | Noa Shapira | Schedule · My classes · Credits |
+
+*Also available, same password:* `instructor1.a@test` (Yael Bar), who teaches
+the full-and-waitlisted class about 48 hours out, and `student2.a@test` through
+`student6.a@test`.
 
 ### Three steps to evaluate it
 
@@ -64,11 +69,36 @@ quickest way to see the booking flow from the member's side.)*
 
 **Two short detours, if useful:**
 
-- *The member's view:* sign in as `student1.a@test` (Noa Shapira), who holds a
-  10-class credit package and an existing booking. The **Credits** page shows
-  the running ledger — every credit spent, refunded or expired, with a reason.
-- *The instructor's view:* sign in as `instructor1.a@test` and open **Teaching**.
-  Attendance marking lives there rather than in the admin pages.
+- *The member's view:* sign in as the student account above (Noa Shapira), who
+  holds a 10-class credit package and an existing booking. The **Credits** page
+  shows the running ledger — every credit spent, refunded or expired, with a
+  reason.
+- *The instructor's view:* sign in as an instructor account and open
+  **Teaching**. Attendance marking lives there rather than in the admin pages.
+
+### Testing role separation
+
+Three checks demonstrate the access control end to end:
+
+1. **The navigation bar changes with the role.** Compare the three accounts
+   above. Note that it is *role-primary*, not cumulative: an administrator gets
+   the admin set only, and reaches their own bookings from the tile grid at the
+   foot of the Dashboard rather than from the header.
+
+2. **A forbidden route is refused, not merely hidden.** Signed in as
+   `student1.a@test`, type `/admin` directly into the address bar. You are
+   redirected to the schedule rather than shown the dashboard. The same applies
+   to `/teach`. (Administrators *can* reach `/teach` — that is deliberate, so an
+   owner who also teaches can mark their own class.)
+
+3. **The redirect is not the security.** It is a user-experience affordance that
+   produces a clear outcome instead of an empty screen. The actual boundary is
+   PostgreSQL Row Level Security: every table carries policies that scope rows
+   to the signed-in user's studio and role, so a request that bypasses the
+   interface entirely still returns nothing. Read queries carry no ownership
+   filters in application code at all — the database supplies them, so there is
+   no `where user_id = …` for a developer to forget. See
+   `StudioFlow_Docs/06-basic-security.md`.
 
 > **One note so nothing looks broken:** in-app notifications work normally, but
 > transactional *email* is not configured on this deployment (no mail provider
