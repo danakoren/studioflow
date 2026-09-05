@@ -13,7 +13,7 @@
  * studio_members.must_change_password via complete_password_rotation(). That
  * flag is cleared by a SECURITY DEFINER function rather than a direct update
  * because studio_members has no self-update policy at all: granting one would
- * let any member set their own role to 'admin' (test PR-21).
+ * let any member set their own role to 'admin'.
  *
  * Changing a password also invalidates every OTHER session for the account
  * (Basic Security §1.7), so anyone who was handed the temporary password

@@ -35,8 +35,7 @@ import { getBalance, getLedgerPage } from '@/lib/data/credits.queries';
  * query on this page reads as the calling user, and the RLS policies
  * credit_ledger_select_own / credit_grants_select_own restrict rows to
  * student_id = auth.uid(). A student cannot see another student's ledger even
- * by crafting a direct PostgREST request with their own JWT (tests PR-12,
- * PR-13).
+ * by crafting a direct PostgREST request with their own JWT.
  */
 
 export const dynamic = 'force-dynamic';

@@ -9,7 +9,7 @@
  * Passing app/teach/layout.tsx proves the viewer is staff. It proves NOTHING
  * about this particular session. An instructor may only reach the roster of a
  * class they personally teach, so this page verifies instructor_id against the
- * viewer and 404s otherwise (Basic Security §2.5; tests PR-24, PR-26, PR-33).
+ * viewer and 404s otherwise (Basic Security §2.5).
  *
  * That check is a UX affordance layered on the real one: bookings_select_own_roster
  * and profiles_select_own_roster both route through teaches_session(), which

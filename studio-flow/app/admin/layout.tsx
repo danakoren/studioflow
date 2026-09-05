@@ -20,8 +20,8 @@ import { getVerifiedUser, getMembership } from '@/lib/auth/require';
  * a page rendering zero rows rather than a page rendering other people's money.
  *
  * The most privileged plausible attacker is not an instructor, though: it is
- * admin.b@test, a full administrator of a DIFFERENT studio. Tests PR-44 to
- * PR-54 attack this tree with those credentials. Nothing in this layout defends
+ * admin.b@test, a full administrator of a DIFFERENT studio, who is seeded so
+ * that isolation can be exercised. Nothing in this layout defends
  * against them — every query below scopes to the ACTOR'S OWN membership, and
  * the policies enforce it independently.
  */
