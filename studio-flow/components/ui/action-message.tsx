@@ -5,9 +5,8 @@
  *
  * Inline feedback for a Server Action result.
  *
- * DEVIATION FROM THE DESIGN DOCUMENT, recorded rather than hidden: §6.1 listed
- * `sonner` for transient feedback. Toasts are the wrong control for these
- * particular messages:
+ * NO TOAST LIBRARY IS USED FOR ACTION RESULTS, and that is deliberate. Toasts
+ * are the wrong control for these particular messages:
  *
  *   - "This class is full — join the waitlist?" is not transient. It is an
  *     OFFER, and business goal G1 depends on the student acting on it. A
@@ -17,8 +16,8 @@
  *
  * So results render inline, next to the control. `role="alert"` on failures
  * makes a screen reader announce them immediately — satisfying Design §8.3's
- * requirement that action results reach a screen-reader user. sonner can still
- * be added later for genuinely incidental confirmations.
+ * requirement that action results reach a screen-reader user. A toast library
+ * could still be added later for genuinely incidental confirmations.
  */
 
 import { CheckCircle2, AlertCircle, Info } from 'lucide-react';

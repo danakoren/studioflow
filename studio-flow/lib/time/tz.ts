@@ -4,9 +4,8 @@
  * All timestamps are stored UTC (BR-14) and DISPLAYED in the studio's
  * timezone. This module is the only place that conversion happens.
  *
- * DEVIATION FROM THE ARCHITECTURE DOCUMENT, recorded rather than hidden:
- * §6.4 specified date-fns + date-fns-tz. In implementation that dependency
- * buys nothing, because the work splits cleanly in two:
+ * NO DATE LIBRARY IS USED HERE, and that is deliberate: the work splits
+ * cleanly in two and neither half needs one.
  *
  *   - DISPLAY in a named zone -> Intl.DateTimeFormat does this natively and
  *     correctly, including DST, with zero dependencies.
@@ -16,7 +15,7 @@
  *
  * What remains in TypeScript is subtraction between two absolute instants,
  * which is timezone-independent by definition. If richer parsing is ever
- * needed, date-fns-tz drops in behind this module without touching a single
+ * needed, a library drops in behind this module without touching a single
  * component.
  */
 
