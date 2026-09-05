@@ -274,7 +274,7 @@ export async function createInstructor(
  * The flag is cleared by complete_password_rotation(), a SECURITY DEFINER
  * function that touches exactly one boolean on exactly the caller's own row.
  * studio_members has no self-update policy at all, because granting one would
- * let a student set role = 'admin' (test PR-21). A narrow function is the
+ * let a student set role = 'admin'. A narrow function is the
  * correct way to permit one specific field change without opening the table.
  */
 export async function changePassword(

@@ -13,10 +13,9 @@
  * student "you will lose this credit" BEFORE they confirm. A user must never
  * discover a forfeited credit after the fact.
  *
- * That duplication is a real drift risk, so it is guarded by a contract test
- * (tests/unit/policy-contract.test.ts) which feeds an identical fixture table
- * to both implementations and asserts identical results. CI catches drift —
- * not a student losing a credit they were told they would keep.
+ * That duplication is a real drift risk. tests/unit/policy.test.ts covers the
+ * functions below against a fixture table; the Postgres implementation is kept
+ * in step by hand, and nothing asserts the two agree automatically.
  *
  * `now` is an EXPLICIT PARAMETER, never read from the ambient clock. That is a
  * testability decision (Test Specification §0.4): it makes the boundary case at

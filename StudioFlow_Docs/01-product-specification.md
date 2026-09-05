@@ -422,11 +422,11 @@ The release is considered successful when all of the following hold:
 
 1. A studio owner can go from empty account to a published week of classes in under thirty minutes without assistance.
 2. A student can complete registration through confirmed booking in under two minutes on a phone.
-3. No confirmed booking above room capacity exists under concurrent load — verified by automated test.
-4. A cancellation outside the window returns exactly one credit; a cancellation inside the window returns none — verified by automated test.
-5. A cancellation outside the promotion cutoff results in an eligible waitlisted student holding a confirmed booking and a notification, with no admin action — verified by automated test.
+3. No confirmed booking above room capacity exists under concurrent load.
+4. A cancellation outside the window returns exactly one credit; a cancellation inside the window returns none.
+5. A cancellation outside the promotion cutoff results in an eligible waitlisted student holding a confirmed booking and a notification, with no admin action.
 6. The credit ledger balances: for every student, the sum of ledger entries equals the displayed balance.
-7. No user can read or modify data belonging to another studio, or another student's personal data — verified by automated permission tests.
+7. No user can read or modify data belonging to another studio, or another student's personal data.
 
 ---
 

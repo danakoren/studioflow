@@ -22,7 +22,7 @@ policy.
 | **Frontend** | Next.js 16 (App Router, React Server Components), TypeScript, Tailwind CSS v4 |
 | **Backend** | Supabase — PostgreSQL, Row Level Security, Auth |
 | **Hosting** | Vercel, with three scheduled cron jobs |
-| **Scale** | 23 routes · 12 SQL migrations · 105 automated tests |
+| **Scale** | 23 routes · 12 SQL migrations · 111 automated tests |
 
 The central architectural decision is that **business rules live in PostgreSQL
 functions running under row locks, not in application code**. Booking a class,
@@ -156,11 +156,12 @@ Server Components helped here: most pages fetch their own data directly, with no
 client-side state management library anywhere in the project.
 
 **Automated testing.** Setting up the first Vitest test took some effort; every
-test after that was cheap. The suite reached **105 tests** covering colour
-assignment, redirect sanitisation, date and policy calculations, and the shared
-rule table that proves the TypeScript display logic and the PostgreSQL
-authoritative logic agree with each other. All 105 pass, alongside a clean
-TypeScript compile, a clean lint, and a scripted security audit.
+test after that was cheap. The suite reached **111 tests** covering colour
+assignment, redirect sanitisation, timezone and week-boundary arithmetic, input
+validation, and the cancellation and promotion window calculations. All 111
+pass, alongside a clean TypeScript compile, a clean lint, and a scripted
+security audit. These are unit tests over pure functions; the database logic is
+not covered by automated tests.
 
 ---
 

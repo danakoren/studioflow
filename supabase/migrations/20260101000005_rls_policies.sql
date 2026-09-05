@@ -143,7 +143,7 @@ create policy studio_members_insert_admin
 
 -- NOTE: there is deliberately NO update policy for a member on their own row.
 -- Without this omission the entire authorisation model collapses to a single
--- UPDATE setting role = 'admin' (test PR-21).  Password-rotation state is
+-- UPDATE setting role = 'admin'.  Password-rotation state is
 -- cleared by a SECURITY DEFINER function instead.
 create policy studio_members_update_admin
   on public.studio_members for update
@@ -270,7 +270,7 @@ create policy waitlist_select_admin
 -- ===========================================================================
 -- Students may READ their own grants and may never write one.  A student who
 -- could insert or update here could mint credits, which makes the balance
--- forgeable and the credit system decorative (tests PR-14, PR-15).
+-- forgeable and the credit system decorative.
 
 create policy credit_grants_select_own
   on public.credit_grants for select
@@ -284,7 +284,7 @@ create policy credit_grants_select_admin
 
 -- Instructors have NO access to grants at all: the specification states they
 -- have no financial visibility, and this is where that is enforced rather
--- than merely stated (tests PR-27, PR-28).
+-- than merely stated.
 
 
 -- ===========================================================================
@@ -293,7 +293,7 @@ create policy credit_grants_select_admin
 -- There is no INSERT, UPDATE or DELETE policy on this table for anyone.
 -- Writes happen exclusively inside SECURITY DEFINER functions.  An admin
 -- cannot retroactively edit history to conceal a credit adjustment — the
--- control against threat T5 (tests PR-40, PR-41).
+-- control against threat T5.
 
 create policy credit_ledger_select_own
   on public.credit_ledger for select

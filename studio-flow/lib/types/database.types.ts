@@ -383,7 +383,7 @@ type DatabaseFunctions = {
     Returns: RpcResult<{ attempts: number }>;
   };
 
-  // --- CI assertions (migration 009) ------------------------------------
+  // --- assertion helpers (migration 009) --------------------------------
   assert_rls_coverage: {
     Args: Record<string, never>;
     Returns: Array<{

@@ -215,7 +215,7 @@ npm run audit:security
 npm run verify      # typecheck + tests + audit
 ```
 
-**Status: all green.** `tsc` clean · `eslint` clean · **105 tests / 5 files** ·
+**Status: all green.** `tsc` clean · `eslint` clean · **111 tests / 5 files** ·
 security audit passes · `npm run build` succeeds.
 
 ---

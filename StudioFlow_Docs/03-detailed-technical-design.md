@@ -23,7 +23,7 @@ The Architecture document stated that credit balances are derived by summing an 
 
 **The refinement:** grants become first-class rows in a `credit_grants` table carrying `credits_remaining`, maintained transactionally. The `credit_ledger` remains append-only and remains the audit authority.
 
-**The invariant that keeps both honest:** for any grant *G*, `credits_remaining` must equal the sum of all ledger deltas referencing *G*. This is asserted by an automated test (§9.4), so the projection cannot silently drift from the ledger. The ledger is truth; the column is speed; a test enforces their agreement.
+**The invariant that keeps both honest:** for any grant *G*, `credits_remaining` must equal the sum of all ledger deltas referencing *G*. `assert_ledger_consistency()` (migration 009) checks this against a live database and is run manually. The ledger is truth; the column is speed.
 
 This is recorded rather than quietly changed, because the discrepancy between an approved architecture and its implementation is exactly the kind of thing that should be visible.
 
@@ -625,7 +625,7 @@ The resolution:
 | Postgres functions | The same rules, transactionally | **Authoritative** |
 | `tests/unit/policy-contract.test.ts` | A shared table of cases run against both | Proves agreement |
 
-The pure TypeScript functions exist so `CancelBookingDialog` can say "you will lose this credit" *before* the user confirms. They never decide anything. The database decides. A contract test feeds an identical fixture table to both implementations and asserts identical results, so drift is caught by CI rather than by a student losing a credit they were told they would keep.
+The pure TypeScript functions exist so `CancelBookingDialog` can say "you will lose this credit" *before* the user confirms. They never decide anything. The database decides. `tests/unit/policy.test.ts` covers the TypeScript side against a fixture table. Agreement with the Postgres implementation is maintained by keeping the two in step by hand; nothing asserts it automatically.
 
 ### 5.2 Booking logic — `book_session`
 

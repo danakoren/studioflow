@@ -20,8 +20,8 @@
  *      this module somewhere disallowed and watching `npm run lint` fail.
  *
  *   2. The key is NEVER prefixed NEXT_PUBLIC_, so it cannot be inlined into
- *      the client bundle. Test PR-58 runs `next build` and greps
- *      .next/static for its value; any occurrence fails CI.
+ *      the client bundle. `npm run audit:security` asserts that no secret
+ *      carries that prefix, which is what would place it in the bundle.
  *
  *   3. It is never logged and never placed in an error payload.
  * ===================================================================

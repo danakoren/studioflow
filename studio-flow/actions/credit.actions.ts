@@ -10,7 +10,7 @@
  * caused but never authored.
  *
  * That is what makes the balance non-forgeable. Without it the credit system
- * would be decorative (Basic Security §2.5, tests PR-14/PR-15/PR-40/PR-41).
+ * would be decorative (Basic Security §2.5).
  */
 
 'use server';

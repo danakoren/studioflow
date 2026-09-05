@@ -13,7 +13,7 @@
 --
 --   * registerStudent() — inserts the studio_members row through the service
 --     client, because a registering visitor has no session yet and
---     studio_members deliberately has no self-insert policy (PR-21). Without
+--     studio_members deliberately has no self-insert policy. Without
 --     an INSERT grant here, PUBLIC REGISTRATION CANNOT COMPLETE.
 --   * createInstructor() — same insert, for an admin-created instructor.
 --   * auth.admin.listUsers() and any future direct read from a cron route.

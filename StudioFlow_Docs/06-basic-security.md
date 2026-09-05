@@ -175,7 +175,7 @@ The failure mode is a new table added late in development where step 1 is forgot
 | Control | Mechanism |
 |---|---|
 | Migration checklist | Every migration adding a table must enable RLS in the same migration |
-| Automated assertion | A test queries `pg_tables` and asserts `rowsecurity = true` for **every** table in the `public` schema — a new unprotected table fails CI |
+| Database assertion | `assert_rls_coverage()` (migration 009) asserts `rowsecurity = true` for **every** table in the `public` schema. It is executed manually against the database. |
 | Supabase advisor | The project's security linter is reviewed before deployment |
 
 The automated assertion is the one that actually holds, because it does not depend on anyone remembering.
@@ -217,13 +217,13 @@ Every table has RLS enabled with no permissive default.
 
 Four cells carry the system's value and are worth stating explicitly:
 
-**No role — including admin — may `UPDATE` or `DELETE` `credit_ledger`.** The ledger is append-only at the policy level, not by convention. A correction is a new `adjustment` entry. This is the control against T5: a studio owner cannot retroactively edit history to conceal a credit adjustment. Verified by tests PR-40 and PR-41.
+**No role — including admin — may `UPDATE` or `DELETE` `credit_ledger`.** The ledger is append-only at the policy level, not by convention. A correction is a new `adjustment` entry. This is the control against T5: a studio owner cannot retroactively edit history to conceal a credit adjustment.
 
-**Students cannot write to `credit_grants` or `credit_ledger` under any policy.** Credits are the product's unit of value. A student can *cause* a deduction by booking — via a `SECURITY DEFINER` function they may invoke but cannot circumvent — and can never author a row directly. Without this, the balance is forgeable and the credit system is decorative. Verified by PR-14 and PR-15.
+**Students cannot write to `credit_grants` or `credit_ledger` under any policy.** Credits are the product's unit of value. A student can *cause* a deduction by booking — via a `SECURITY DEFINER` function they may invoke but cannot circumvent — and can never author a row directly. Without this, the balance is forgeable and the credit system is decorative.
 
-**Students cannot update their own `studio_members` row.** Otherwise the entire authorisation model collapses to one `UPDATE` setting `role = 'admin'`. Verified by PR-21.
+**Students cannot update their own `studio_members` row.** Otherwise the entire authorisation model collapses to one `UPDATE` setting `role = 'admin'`.
 
-**Instructors have no access to `credit_ledger` or `credit_grants` at all.** The specification states instructors have no financial visibility; this is where that is enforced rather than merely stated. Verified by PR-27 and PR-28.
+**Instructors have no access to `credit_ledger` or `credit_grants` at all.** The specification states instructors have no financial visibility; this is where that is enforced rather than merely stated.
 
 ### 2.6 Views and functions must not become bypasses
 
@@ -273,7 +273,7 @@ The application contains **no ownership filter** in its queries. A Server Compon
 
 Every studio-scoped table carries `studio_id`, and every policy constrains it to studios where the requester holds an active membership.
 
-The test suite attacks this using the **most privileged plausible attacker**: `admin.b@test`, a full administrator of a different studio. Tests PR-44 through PR-54 attempt to read Studio A's bookings, profiles, ledgers, grants and members, and to write sessions and credits into it. Every one must return zero rows or be rejected.
+The isolation is designed against the **most privileged plausible attacker**: `admin.b@test`, a full administrator of a different studio, who is seeded for that purpose. Reads of Studio A's bookings, profiles, ledgers, grants and members, and writes of sessions and credits into it, must return zero rows or be rejected.
 
 Choosing an admin rather than a student as the attacker matters. A student failing to read across studios could be an accident of a student-scoped policy; an admin failing proves the tenant boundary is independent of the role hierarchy.
 
@@ -315,7 +315,6 @@ Route Handlers under `/api/cron/*` have no user session and mutate data. Each:
 2. Compares it to `CRON_SECRET` using a **constant-time comparison** (`timingSafeEqual`), not `===` — a naive comparison returns faster on an early-mismatching string, which leaks the secret one character at a time under repeated probing
 3. Rejects with 401 and performs no work on mismatch
 
-Verified by tests PR-55 through PR-57.
 
 ### 3.8 Attack surface deliberately absent
 
@@ -357,13 +356,13 @@ Layers 1 and 2 exist so users see errors immediately. A request forged with `cur
 | **Length limits** | Names 2–100, notes ≤ 500 | Storage abuse, oversized render payloads |
 | **UUID format checks** | Before any database call | Wasted queries on malformed identifiers |
 
-Test cases IV-01 through IV-36 execute every one of these by calling actions directly, bypassing forms.
+`tests/unit/validation.test.ts` exercises these against the Zod schemas directly, bypassing the forms.
 
 ### 4.3 Injection
 
-**SQL injection.** No SQL string is ever concatenated. The Supabase client sends parameterised PostgREST requests; `plpgsql` functions receive typed parameters. Dynamic `EXECUTE` is not used anywhere in the project — where it is unavoidable in general practice, `format()` with `%I`/`%L` is the correct approach, and its absence here removes the question entirely. Test IV-07 stores a classic injection payload and confirms it is inert literal text.
+**SQL injection.** No SQL string is ever concatenated. The Supabase client sends parameterised PostgREST requests; `plpgsql` functions receive typed parameters. Dynamic `EXECUTE` is not used anywhere in the project — where it is unavoidable in general practice, `format()` with `%I`/`%L` is the correct approach, and its absence here removes the question entirely. A unit test confirms the schemas accept a classic injection payload as inert literal text rather than rejecting it.
 
-**Cross-site scripting.** React escapes all interpolated content by default. The project rule is absolute: **`dangerouslySetInnerHTML` is not used**, and no user-supplied content is ever rendered as HTML or markdown. Test IV-06 stores a `<script>` payload as a student name and asserts it renders escaped. The absence of any rich-text feature (§3.8) means there is no legitimate reason for the rule to be relaxed later.
+**Cross-site scripting.** React escapes all interpolated content by default. The project rule is absolute: **`dangerouslySetInnerHTML` is not used**, and no user-supplied content is ever rendered as HTML or markdown. A unit test confirms a `<script>` payload is accepted as a literal student name; that React escapes it on render is a property of the framework, not something this project asserts in a test. The absence of any rich-text feature (§3.8) means there is no legitimate reason for the rule to be relaxed later.
 
 **Open redirect.** The auth callback accepts a `next` parameter. It is validated to be a relative path beginning with a single `/` — an absolute URL or protocol-relative `//evil.example` is rejected — so the login flow cannot be used to bounce a user to an attacker-controlled site with the studio's domain as the referrer.
 
@@ -377,7 +376,7 @@ Test cases IV-01 through IV-36 execute every one of these by calling actions dir
 | Stack traces | Reveals file paths, library versions, internal structure |
 | Whether an email is registered | User enumeration |
 
-`lib/errors/map.ts` translates Postgres error codes into the application's own `ErrorCode` enum before anything reaches the client. Unmapped errors become `INTERNAL_ERROR` with full detail logged **server-side only**. Tests IV-34 and IV-35 assert this.
+`lib/errors/map.ts` translates Postgres error codes into the application's own `ErrorCode` enum before anything reaches the client. Unmapped errors become `INTERNAL_ERROR` with full detail logged **server-side only**.
 
 ### 4.5 Absent in v1: rate limiting
 
@@ -419,10 +418,10 @@ This key **bypasses RLS entirely**. Holding it is equivalent to unrestricted dat
 | Never prefixed `NEXT_PUBLIC_` | Excluded from the client bundle by construction |
 | Confined to one module | Only `lib/supabase/service.ts` reads it |
 | Import restriction | ESLint `no-restricted-imports` permits that module to be imported only by `app/api/cron/**` — a violation fails the build |
-| Build-artifact test | **PR-58** runs `next build` and greps `.next/static` for the key's value; any occurrence fails CI |
+| Source check | `npm run audit:security` asserts that no secret carries a `NEXT_PUBLIC_` prefix, which is what would place it in the client bundle. |
 | Never logged | Excluded from all logging and error reporting |
 
-PR-58 is mechanical rather than review-based deliberately. A single accidental prefix would publish a credential that defeats every policy in §2, and that mistake is invisible in a diff.
+The prefix check is mechanical rather than review-based deliberately. A single accidental prefix would publish a credential that defeats every policy in §2, and that mistake is invisible in a diff.
 
 ### 5.5 Repository and deployment hygiene
 
@@ -456,7 +455,7 @@ Recorded honestly. Each risk states its exposure, current mitigation, and intend
 | **R7** | **Service role key held in the Vercel environment** | Compromise of the Vercel account yields full database access | Vercel account access control; key confined to three cron routes | **High if realised** |
 | **R8** | **No automated dependency vulnerability scanning** | A vulnerable transitive dependency could persist unnoticed | Small, deliberately chosen dependency set | **Medium** |
 | **R9** | **No re-authentication for sensitive actions** | An unattended logged-in admin session can grant credits | Ledger records `created_by` and cannot be edited | **Low–Medium** |
-| **R10** | **No secret scanning in CI** | A committed key would rely on human review to catch | `.gitignore`, `.env.example`, PR-58 build grep | **Medium** |
+| **R10** | **No secret scanning in CI** | A committed key would rely on human review to catch | `.gitignore`, `.env.example`, the `NEXT_PUBLIC_` prefix check in `npm run audit:security` | **Medium** |
 | **R11** | **No point-in-time recovery on the free tier** | Data loss window between backups | Schema in migrations; data recoverable only to last backup | **Medium** |
 | **R12** | **Soft deletion conflicts with data-erasure requests** | Nothing is hard-deleted (Design §3.13), so a deletion request cannot be satisfied by deletion | Data minimisation — no addresses, no payment data, no documents | **Low now, higher with growth** |
 | **R13** | **Insider risk from a studio's own admin** | An admin can grant themselves unlimited credits | Every movement recorded in an **immutable** ledger with attribution | **Accepted** |
@@ -505,25 +504,31 @@ R13 is marked accepted rather than open. The studio owner is the customer; preve
 
 ## 7. Security Testing Coverage
 
-Every control in this document has a corresponding test in the Test Specification. Claims without tests are assertions.
+What runs is `npm run verify`: 111 unit tests across five files, plus
+`npm run audit:security`, a nine-item source-level checklist.
 
-| Control | Tests |
+| Check | Mechanism |
 |---|---|
-| Anonymous access denied to private tables | PR-01 – PR-08 |
-| Student cannot read another student's data | PR-10, PR-12, PR-13, PR-22 |
-| **Student cannot write to the credit ledger or grants** | **PR-14, PR-15** |
-| **Student cannot escalate their own role** | **PR-21** |
-| Instructor confined to own taught sessions | PR-24, PR-26, PR-33 |
-| Instructor has no financial visibility | PR-27, PR-28, PR-29 |
-| **Ledger immutable for every role, including admin** | **PR-40, PR-41** |
-| **Cross-studio isolation against a rival admin** | **PR-44 – PR-54** |
-| Cron endpoints reject bad or missing secrets | PR-55 – PR-57 |
-| **Service role key absent from the client bundle** | **PR-58** |
-| Input validation rejects malformed and hostile values | IV-01 – IV-33 |
-| XSS payload stored inert and rendered escaped | IV-06 |
-| SQL injection payload stored inert | IV-07 |
-| No internal error detail leaks to the client | IV-34, IV-35 |
-| RLS enabled on every public table | §2.2 automated `pg_tables` assertion |
+| `getSession()` absent from all authorisation paths | `npm run audit:security` |
+| `getUser()` is the verification call in `lib/auth/require.ts` | `npm run audit:security` |
+| `dangerouslySetInnerHTML` absent | `npm run audit:security` |
+| Service-role client confined to its allowlist | `npm run audit:security`, and ESLint `no-restricted-imports` |
+| No secret carries a `NEXT_PUBLIC_` prefix | `npm run audit:security` |
+| No layout-wide cache invalidation | `npm run audit:security` |
+| Mass assignment: every schema is `.strict()` | `npm run audit:security` |
+| Self-service actions derive identity from `getUser()` | `npm run audit:security` |
+| Every action module routes through `runAction()` | `npm run audit:security` |
+| Input validation rejects malformed and hostile values | `tests/unit/validation.test.ts` |
+| Redirect sanitisation rejects off-site targets | `tests/unit/redirect.test.ts` |
+| Cancellation and promotion window calculations | `tests/unit/policy.test.ts` |
+
+The Row Level Security controls in §2 are enforced by the policies in migration
+005 and the privilege grants in migrations 010 and 011. They are not covered by
+automated tests. `assert_rls_coverage()`, `assert_no_overbooking()`,
+`assert_ledger_consistency()`, `assert_no_dual_state()`,
+`assert_definer_search_path()` and `assert_views_security_invoker()`
+(migration 009) check these properties against a live database and are executed
+manually.
 
 ---
 
@@ -538,7 +543,7 @@ Executed against the production deployment before submission.
 | 3 | Supabase security advisor reports no errors | Dashboard |
 | 4 | All `SECURITY DEFINER` functions pin `search_path` | Schema review |
 | 5 | All views declared `security_invoker` | Schema review |
-| 6 | Service role key absent from `.next/static` | PR-58 in CI |
+| 6 | No secret carries a `NEXT_PUBLIC_` prefix | `npm run audit:security` |
 | 7 | No secret appears in git history | Gitleaks scan of full history |
 | 8 | `.env.local` untracked; `.env.example` contains placeholders only | `git ls-files` |
 | 9 | Production and preview use separate Supabase projects | Vercel environment configuration |

@@ -8,7 +8,7 @@
 -- must NEVER be run against production.
 --
 -- Two studios are created deliberately.  Studio B exists for one purpose: to
--- give the permission tests a real cross-tenant attacker.  Tests PR-44..PR-54
+-- give cross-tenant isolation checks a real attacker to work with.
 -- run as admin.b@test — a FULL ADMINISTRATOR of another studio, which is the
 -- most privileged plausible attacker — and assert they can read nothing.
 --
@@ -221,7 +221,7 @@ begin
   -- Sessions — all relative to now()
   -- =========================================================================
 
-  -- 48h away, capacity 2. Filled below, then waitlisted: the BF-02 fixture.
+  -- 48h away, capacity 2. Filled below, then waitlisted.
   insert into public.sessions
     (studio_id, class_type_id, room_id, instructor_id, starts_at, ends_at,
      capacity, created_by)
@@ -241,7 +241,7 @@ begin
      6, v_admin_a)
   returning id into v_sess_open;
 
-  -- 6h away: INSIDE the 12h cancellation window (BR-2 / BF-03).
+  -- 6h away: INSIDE the 12h cancellation window (BR-2).
   insert into public.sessions
     (studio_id, class_type_id, room_id, instructor_id, starts_at, ends_at,
      capacity, created_by)
@@ -251,7 +251,7 @@ begin
      3, v_admin_a)
   returning id into v_sess_soon;
 
-  -- 90m away: INSIDE the 2h promotion cutoff (BR-3 / BF-04).
+  -- 90m away: INSIDE the 2h promotion cutoff (BR-3).
   insert into public.sessions
     (studio_id, class_type_id, room_id, instructor_id, starts_at, ends_at,
      capacity, created_by)
@@ -271,7 +271,7 @@ begin
      1, v_admin_a)
   returning id into v_sess_tiny;
 
-  -- Ended 2h ago: attendance marking window is open (BR-11 / BF-07).
+  -- Ended 2h ago: attendance marking window is open (BR-11).
   insert into public.sessions
     (studio_id, class_type_id, room_id, instructor_id, starts_at, ends_at,
      capacity, created_by)
@@ -306,7 +306,7 @@ begin
      10, v_admin_b);
 
   -- =========================================================================
-  -- Bookings and waitlist — the BF-02 scenario, pre-built
+  -- Bookings and waitlist — the full-with-waitlist scenario, pre-built
   -- =========================================================================
   -- v_sess_future has capacity 2. s1 and s2 are booked (FULL).
   -- s5 (no credits) joins the waitlist FIRST, then s3.

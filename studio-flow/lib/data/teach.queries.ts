@@ -17,8 +17,7 @@
  * bookings_select_own_roster and profiles_select_own_roster both route through
  * teaches_session(), which compares sessions.instructor_id to auth.uid()
  * rather than checking a role. An instructor who hand-crafts a PostgREST
- * request for a colleague's roster receives zero rows (tests PR-24, PR-26,
- * PR-33).
+ * request for a colleague's roster receives zero rows.
  *
  * ==========================================================================
  * A NOTE ON WAITLIST NAMES

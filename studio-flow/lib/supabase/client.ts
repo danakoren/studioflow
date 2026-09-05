@@ -10,8 +10,8 @@
  * The anon key here is public by design and is embedded in the client bundle.
  * It grants NOTHING on its own, because every table denies access absent a
  * matching policy — but that safety is CONDITIONAL on RLS being enabled
- * everywhere, which is why assert_rls_coverage() runs in CI
- * (Basic Security §5.3).
+ * everywhere. assert_rls_coverage() (migration 009) asserts that condition
+ * against the database and is run manually (Basic Security §5.3).
  */
 
 'use client';

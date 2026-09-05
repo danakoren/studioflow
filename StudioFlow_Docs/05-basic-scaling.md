@@ -311,7 +311,7 @@ Separation is asserted mechanically, not by convention:
 
 | Check | Mechanism |
 |---|---|
-| Service key absent from client bundle | Build-output grep (Test Specification PR-58) |
+| No secret carries a `NEXT_PUBLIC_` prefix | `npm run audit:security` |
 | `lib/supabase/service.ts` imported only by cron routes | ESLint `no-restricted-imports` |
 | No writes outside `actions/` | Directory convention + review |
 | Client bundle size | `@next/bundle-analyzer`, budget of 200KB gzipped for the student journey |
@@ -336,7 +336,7 @@ Stated honestly. Each entry gives the limitation, the scale at which it becomes 
 | L8 | **Email dispatch capped** at 50 per 5-minute run. | ~600 notifications/hour | Sufficient; a mass cancellation of a 100-person event would queue briefly |
 | L9 | **Hot-row lock serialises** bookings for one session. | Thousands of simultaneous bookings on one session | None at studio scale (§1.3) |
 | L10 | **Single database, no read replica.** Reports and bookings share resources. | Heavy concurrent reporting | None at current volumes |
-| L11 | **No visual regression or load testing** in CI. | — | Regressions caught manually |
+| L11 | **No visual regression or load testing.** | — | Regressions caught manually |
 
 ### 6.2 Improvements, in priority order
 

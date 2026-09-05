@@ -54,6 +54,14 @@ We do not chase a coverage percentage. A suite at 90% coverage that never runs t
 
 The integration layer is intentionally the largest. This is an inversion of the conventional pyramid, and it is justified: **the correctness of this system lives in Postgres.** The row lock, the exclusion constraints, the partial unique indexes and the RLS policies cannot be tested by mocking a database. A unit test with a stubbed Supabase client would prove that our TypeScript calls a function, not that the function is correct.
 
+**What is implemented is the unit layer only:** 111 tests across five files —
+`class-tone`, `policy`, `redirect`, `tz` and `validation` — run by
+`npm run test:unit`, or by `npm run verify` together with the type check and
+`npm run audit:security`. The integration, end-to-end and manual layers
+specified below are not implemented, so the row lock, the exclusion
+constraints, the partial unique indexes and the RLS policies are not covered by
+any automated test.
+
 ### 0.3 Tooling
 
 | Layer | Tool | Environment |
@@ -64,7 +72,7 @@ The integration layer is intentionally the largest. This is an inversion of the 
 | E2E | Playwright (Chromium, WebKit) | Built Next.js app + local Supabase |
 | Manual | Documented checklist | Preview deployment on Vercel |
 
-**Fallback:** if Docker is unavailable, integration tests run against a dedicated Supabase test project, reset by a teardown script between runs. This is slower and must not be the default, because tests that share a remote database cannot run in parallel safely.
+Of these, only the unit row is in use. Vitest is installed; `supabase start`, `node-postgres` and Playwright are not part of the project.
 
 ### 0.4 How time is controlled
 
@@ -654,7 +662,7 @@ Documented in `tests/manual/checklist.md`, executed against the Vercel preview b
 
 | ID | Test | Why manual |
 |---|---|---|
-| UI-M01 | Promotion email renders correctly in Gmail and Outlook | Client rendering cannot be asserted in CI |
+| UI-M01 | Promotion email renders correctly in Gmail and Outlook | Client rendering cannot be asserted automatically |
 | UI-M02 | Email links resolve to the correct deployed URL | Depends on production environment variables |
 | UI-M03 | Real iOS Safari — full booking journey | Mobile Safari behaviours differ from emulation |
 | UI-M04 | Real Android Chrome — full booking journey | Same |

@@ -7,7 +7,7 @@
  * legible at the call site. The RLS policies bookings_select_own and
  * waitlist_select_own restrict rows to student_id = auth.uid(), so a student
  * cannot see another student's bookings even by crafting a direct PostgREST
- * request with their own JWT (tests PR-12, PR-13).
+ * request with their own JWT.
  *
  * ==========================================================================
  * TWO ROUND TRIPS, NEVER ONE PER ROW
